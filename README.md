@@ -10,7 +10,7 @@ HexMem gives AI agents persistent, searchable memory with semantic embeddings, r
 
 - [For Users](#for-users)
   - [Quick Start](#quick-start)
-  - [Agent Framework Integration](#agent-framework-integration)
+  - [OpenClaw Integration](#openclaw-integration)
   - [CLI Reference](#cli-reference)
   - [SDK](#sdk)
   - [API Reference](#api-reference)
@@ -64,13 +64,54 @@ docker compose up -d
 
 ---
 
-## Agent Framework Integration
+## OpenClaw Integration
 
-HexMem is designed to plug into any AI agent framework. Integration involves:
+HexMem includes a ready-to-use OpenClaw plugin and setup script. One command installs everything:
 
-1. **Create an agent** via the API or CLI
-2. **Use the SDK** or REST API to store/recall memories from your agent's code
-3. **Hook into session lifecycle** — flush context before session compaction
+```bash
+# Ensure HexMem is running first
+npm run dev
+
+# Run setup — specify your OpenClaw agent slugs
+npx tsx tools/setup-openclaw.ts --agents my-agent,my-other-agent
+```
+
+This single command:
+1. **Verifies** HexMem is alive
+2. **Creates** a HexMem agent for each OpenClaw agent
+3. **Installs** the `hexmem` plugin to `~/.openclaw/extensions/hexmem/`
+4. **Updates** `openclaw.json` — claims the memory slot, configures tools and compaction
+5. **Updates** each agent's `MEMORY.md` with HexMem connection info
+6. **Validates** end-to-end recall
+
+```bash
+# After setup:
+openclaw restart                         # activate the plugin
+openclaw plugins list                    # verify 'hexmem' shows up
+
+# Verify-only mode (no changes):
+npx tsx tools/setup-openclaw.ts --agents my-agent --check
+
+# Custom HexMem URL:
+npx tsx tools/setup-openclaw.ts --agents my-agent --hexmem-url http://myhost:3400
+```
+
+### Tools Available to Agents
+
+Once integrated, every OpenClaw agent gets these tools:
+
+| Tool | What it does |
+|------|-------------|
+| `hexmem_recall` | Semantic + keyword + recency search across all memory types |
+| `hexmem_store` | Store facts, decisions, events, or tasks with auto-embedding |
+| `hexmem_search` | Direct vector search over a specific table |
+| `hexmem_status` | Memory health: agent info, decay status |
+| `hexmem_sql` | Raw SQL queries (SELECT only) for exploration |
+| `hexmem_session_log` | Log session messages for continuity across compaction |
+
+### Standalone SDK Integration
+
+For non-OpenClaw frameworks, use the SDK directly:
 
 ```typescript
 import { HexMem } from './sdk/index.js';
@@ -86,14 +127,6 @@ await mem.storeFact({ content: 'User prefers dark mode', tags: ['preferences'] }
 
 // Recall before responding
 const context = await mem.recall('user preferences', { types: ['fact'] });
-```
-
-The SDK also provides pre-built tool definitions compatible with function-calling agent frameworks:
-
-```typescript
-import { getOpenClawTools } from './sdk/index.js';
-const tools = getOpenClawTools(mem);
-// Returns: memory_store, memory_recall, memory_update_core
 ```
 
 ---

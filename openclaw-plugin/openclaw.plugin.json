@@ -1,0 +1,34 @@
+{
+    "id": "hexmem",
+    "name": "HexMem",
+    "version": "2.0.0",
+    "description": "Structured semantic memory for OpenClaw agents — facts, decisions, tasks, events, sessions",
+    "entry": "./index.ts",
+    "kind": "memory",
+    "configSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "url": {
+                "type": "string",
+                "default": "http://localhost:3737",
+                "description": "HexMem API base URL"
+            },
+            "apiKey": {
+                "type": "string",
+                "default": "hexmem-local",
+                "description": "HexMem API key (if auth enabled)"
+            }
+        }
+    },
+    "uiHints": {
+        "url": {
+            "label": "HexMem URL",
+            "placeholder": "http://localhost:3737"
+        },
+        "apiKey": {
+            "label": "API Key",
+            "sensitive": true
+        }
+    }
+}

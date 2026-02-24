@@ -27,11 +27,9 @@ coverage/
 *.log
 npm-debug.log*
 
-# Backup files from setup script
+# Backup files
 *.bak.*
 *.backup.*
 
-# Private / infrastructure-specific
-tools/
-openclaw-plugin/
+# Private / local-only docs and migration scripts
 docs/
