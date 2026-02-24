@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment files (contain API keys and passwords)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Backup files from setup script
+*.bak.*
+*.backup.*
+
+# Private / infrastructure-specific
+tools/
+openclaw-plugin/
+docs/

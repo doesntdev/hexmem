@@ -1,0 +1,21 @@
+services:
+  hexmem-db:
+    image: docker.io/pgvector/pgvector:pg16
+    container_name: hexmem-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hexmem
+      POSTGRES_PASSWORD: ${HEXMEM_DB_PASSWORD:-hexmem_dev}
+      POSTGRES_DB: hexmem
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - hexmem_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hexmem -d hexmem"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  hexmem_pgdata:
