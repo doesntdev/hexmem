@@ -380,58 +380,44 @@ Same pattern for `/api/v1/decisions`, `/api/v1/tasks`, `/api/v1/events`, `/api/v
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Clients                               │
-│  CLI (cli.ts)  │  SDK (sdk/)  │  OpenClaw Plugin        │
-└───────┬────────┴──────┬───────┴────────┬────────────────┘
-        │               │                │
-        ▼               ▼                ▼
-┌─────────────────────────────────────────────────────────┐
-│               Fastify API Server (server.ts)            │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │   Auth        │  │   Routes     │  │  Middleware    │  │
-│  │  (auth.ts)    │  │  agents.ts   │  │  Bearer token │  │
-│  │  API keys +   │  │  sessions.ts │  │  auth check   │  │
-│  │  dev bypass   │  │  memory.ts   │  │               │  │
-│  └──────────────┘  │  recall.ts   │  └───────────────┘  │
-│                    │  search.ts   │                      │
-│                    │  edges.ts    │                      │
-│                    │  keys.ts     │                      │
-│                    └──────────────┘                      │
-│                                                         │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │                 Services Layer                       │ │
-│  │  extraction.ts  — LLM-powered fact/decision/task    │ │
-│  │                   extraction from messages           │ │
-│  │  summarizer.ts  — Session summarization             │ │
-│  │  dedup.ts       — Two-stage deduplication           │ │
-│  │  decay.ts       — TTL-based memory lifecycle        │ │
-│  │  querylog.ts    — Query analytics                   │ │
-│  │  jobs.ts        — Background job scheduling         │ │
-│  └─────────────────────────────────────────────────────┘ │
-│                                                         │
-│  ┌─────────────────────────────────────────────────────┐ │
-│  │             Embedding Layer                          │ │
-│  │  embedding/index.ts — Provider abstraction          │ │
-│  │  embedding/gemini.ts — Gemini text-embedding-004    │ │
-│  │  embedding/openai.ts — OpenAI ada-002               │ │
-│  │  embedding/ollama.ts — Local Ollama models          │ │
-│  └─────────────────────────────────────────────────────┘ │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────┐
-│            PostgreSQL 16 + pgvector + pg_trgm           │
-│                                                         │
-│  agents │ sessions │ session_messages │ facts            │
-│  decisions │ tasks │ events │ projects │ edges           │
-│  api_keys │ query_log                                   │
-│                                                         │
-│  All memory tables have: embedding (vector 768),        │
-│  decay_status, agent_id, created_at                     │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    subgraph Clients
+        CLI["CLI (cli.ts)"]
+        SDK["SDK (sdk/)"]
+        Plugin["OpenClaw Plugin"]
+    end
+
+    subgraph API["Fastify API Server (server.ts)"]
+        Auth["Auth<br/>API keys + dev bypass"]
+        Routes["Routes<br/>agents · sessions · memory<br/>recall · search · edges · keys"]
+        Middleware["Middleware<br/>Bearer token auth"]
+
+        subgraph Services
+            Extraction["extraction.ts — LLM extraction"]
+            Summarizer["summarizer.ts — Session summaries"]
+            Dedup["dedup.ts — Trigram + cosine dedup"]
+            Decay["decay.ts — Memory lifecycle"]
+            Jobs["jobs.ts — Background scheduling"]
+            QueryLog["querylog.ts — Query analytics"]
+        end
+
+        subgraph Embedding["Embedding Layer"]
+            Gemini["Gemini (text-embedding-004)"]
+            OpenAI["OpenAI (ada-002)"]
+            Ollama["Ollama (local)"]
+        end
+    end
+
+    subgraph DB["PostgreSQL 16 + pgvector + pg_trgm"]
+        Tables["agents · sessions · session_messages<br/>facts · decisions · tasks · events<br/>projects · edges · api_keys · query_log"]
+    end
+
+    CLI --> API
+    SDK --> API
+    Plugin --> API
+    Services --> Embedding
+    API --> DB
 ```
 
 ### Request Lifecycle
