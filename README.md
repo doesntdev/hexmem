@@ -32,34 +32,68 @@ HexMem gives AI agents persistent, searchable memory with semantic embeddings, r
 ### Prerequisites
 
 - **Node.js** 20+
-- **PostgreSQL 16** with extensions: `pgvector`, `pg_trgm`
+- **Podman** or **Docker** (for PostgreSQL)
 - **Gemini API key** (for embeddings; OpenAI and Ollama also supported)
 
-### Install & Run
+### 1. Clone & Install
 
 ```bash
-git clone <repo-url> && cd hexmem
+git clone https://github.com/doesntdev/hexmem.git && cd hexmem
 npm install
+```
 
-# Configure
+### 2. Start PostgreSQL
+
+The included `compose.yaml` runs PostgreSQL 16 with pgvector pre-installed:
+
+```bash
+# Using Podman (recommended)
+podman compose up -d
+
+# Or Docker
+docker compose up -d
+```
+
+This starts a PostgreSQL container (`hexmem-db`) on **port 5433** with:
+- User: `hexmem` / Password: `hexmem_dev` (override with `HEXMEM_DB_PASSWORD`)
+- Database: `hexmem`
+- pgvector extension pre-installed
+- Persistent volume (`hexmem_pgdata`)
+
+Verify it's healthy:
+```bash
+podman exec hexmem-db pg_isready -U hexmem -d hexmem
+```
+
+### 3. Configure
+
+```bash
 cp .env.example .env
-# Edit .env: set DATABASE_URL and GEMINI_API_KEY
+```
 
-# Start the server
+Edit `.env` and set your embedding provider API key:
+```bash
+# Required — your Gemini API key for embeddings
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Database — matches compose defaults, no changes needed
+DATABASE_URL=postgres://hexmem:hexmem_dev@localhost:5433/hexmem
+```
+
+### 4. Start HexMem
+
+```bash
 npm run dev
 ```
 
-Server starts at `http://localhost:3400`. Health check at `/health`.
+On first boot, HexMem automatically:
+- Runs all SQL migrations (enables pgvector, pg_trgm, creates all tables)
+- Starts listening on `http://localhost:3400`
 
-### Using Docker Compose
-
+Verify:
 ```bash
-# Start PostgreSQL + HexMem together
-docker compose up -d
-
-# The compose file sets up:
-#   - PostgreSQL 16 with pgvector on port 5433
-#   - Auto-runs migrations on first boot
+curl http://localhost:3400/health
+# → {"status":"ok"}
 ```
 
 ---
