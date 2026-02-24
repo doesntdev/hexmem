@@ -626,4 +626,12 @@ Tests are organized by phase:
 2. Register it in `src/services/embedding/index.ts`
 3. Update config in `src/config.ts`
 
+---
 
+## License
+
+HexMem is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+This means you can freely use, modify, and distribute HexMem, but if you run a modified version as a service (e.g., SaaS), you must make your source code available under the same license.
+
+**For commercial licensing** (proprietary use without AGPL obligations), contact [d.logan.hart@gmail.com](mailto:d.logan.hart@gmail.com).
